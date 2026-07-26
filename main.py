@@ -13,16 +13,24 @@ def read_root():
 
 @app.get("/v1/probability")
 def get_probability():
-    url = "https://api.football-data.org/v4/competitions/PL/matches?status=FINISHED&limit=1"
+    # 改做拎「即將舉行」嘅比賽，咁就一定有數據
+    url = "https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED&limit=1"
+    
     try:
         response = requests.get(url, headers=HEADERS)
         data = response.json()
+        
+        # 防錯誤：先檢查有冇 matches
+        if not data.get("matches"):
+            return {"error": "No scheduled matches found", "raw_response": data}
+            
         match = data["matches"][0]
+        
         return {
             "fixture_id": match["id"],
             "home_team": match["homeTeam"]["name"],
             "away_team": match["awayTeam"]["name"],
-            "score": f"{match['score']['fullTime']['home']}-{match['score']['fullTime']['away']}",
+            "kickoff": match["utcDate"],
             "source": "football-data.org",
             "status": "live_data"
         }
