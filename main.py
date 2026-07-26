@@ -2,6 +2,7 @@ import os
 import requests
 import numpy as np
 from fastapi import FastAPI
+from datetime import datetime
 
 app = FastAPI()
 
@@ -29,16 +30,20 @@ def get_probability():
         match = data["matches"][0]
         MARKET_HOME_WIN_PROB = 0.55 
         deviation = MODEL_HOME_WIN_PROB - MARKET_HOME_WIN_PROB
+        
+        # Step 6 优化：字段更名，增加时间戳
         return {
             "fixture_id": match["id"],
             "home_team": match["homeTeam"]["name"],
             "away_team": match["awayTeam"]["name"],
             "source": "football-data.org + Poisson Model",
             "status": "live_signal",
-            "model_probability": round(MODEL_HOME_WIN_PROB, 4),
-            "market_probability": MARKET_HOME_WIN_PROB,
-            "deviation_z": round(deviation, 4),
-            "signal": "BUY HOME" if deviation > 0.03 else "NO EDGE"
+            "data_type": "pre_match_risk_signal",
+            "our_assessment": round(MODEL_HOME_WIN_PROB, 4),
+            "market_implied": MARKET_HOME_WIN_PROB,
+            "edge_percentage": round(deviation, 4),
+            "trading_signal": "BUY HOME" if deviation > 0.03 else "NO EDGE",
+            "timestamp": datetime.utcnow().isoformat() + "Z"
         }
     except Exception as e:
         return {"error": "Failed to fetch data", "details": str(e)}
